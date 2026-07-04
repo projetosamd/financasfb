@@ -12,6 +12,12 @@ lerna-debug.log*
 .env.local
 .env.*.local
 
+# Build outputs
+.vercel
+.output
+.nitro
+.tanstack
+
 node_modules
 dist
 dist-ssr

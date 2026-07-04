@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { brl, formatDate } from "@/lib/format";
+import { brl, formatDate, formatBrlInput, parseBrlToNumber } from "@/lib/format";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2, X, Loader2 } from "lucide-react";
@@ -33,6 +33,7 @@ function ExpensesPage() {
   const qc = useQueryClient();
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState<ExpenseForm>(initial);
+  const [formDisplayValor, setFormDisplayValor] = useState("");
 
   const { data: categories } = useQuery({
     queryKey: ["categories"],
@@ -53,7 +54,7 @@ function ExpensesPage() {
         user_id: auth.user.id,
         category_id: v.category_id || null,
         descricao: v.descricao,
-        valor_total: Number(v.valor_total),
+        valor_total: parseBrlToNumber(v.valor_total),
         data_compra: v.data_compra,
         forma_pagamento: v.forma_pagamento,
         observacao: v.observacao || null,
@@ -67,6 +68,7 @@ function ExpensesPage() {
       qc.invalidateQueries();
       setModal(false);
       setForm(initial);
+      setFormDisplayValor("");
     },
     onError: (e: any) => toast.error(e.message ?? "Erro ao cadastrar"),
   });
@@ -163,9 +165,14 @@ function ExpensesPage() {
               </label>
               <label className="space-y-1">
                 <span className="text-xs font-medium text-muted-foreground">Valor total (R$) *</span>
-                <input required type="number" step="0.01" min="0" value={form.valor_total}
-                  onChange={(e) => setForm({ ...form, valor_total: e.target.value })}
-                  className="w-full rounded-xl border border-input bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring/30" />
+                <input required type="text" inputMode="numeric" value={formDisplayValor}
+                  onChange={(e) => {
+                    const formatted = formatBrlInput(e.target.value);
+                    setFormDisplayValor(formatted);
+                    setForm({ ...form, valor_total: formatted });
+                  }}
+                  className="w-full rounded-xl border border-input bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring/30"
+                  placeholder="0,00" />
               </label>
               <label className="space-y-1">
                 <span className="text-xs font-medium text-muted-foreground">Data da compra *</span>

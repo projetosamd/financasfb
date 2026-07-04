@@ -5,6 +5,23 @@ export const brl = (v: number | string | null | undefined) => {
   );
 };
 
+export const formatBrlInput = (value: string): string => {
+  let numericValue = value.replace(/[^\d]/g, "");
+  if (numericValue.length === 0) return "";
+  
+  const number = parseInt(numericValue, 10);
+  return (number / 100).toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
+export const parseBrlToNumber = (formattedValue: string): number => {
+  let numericValue = formattedValue.replace(/[^\d]/g, "");
+  if (numericValue.length === 0) return 0;
+  return parseInt(numericValue, 10) / 100;
+};
+
 export const MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",

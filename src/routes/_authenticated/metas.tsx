@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { brl } from "@/lib/format";
+import { brl, formatBrlInput, parseBrlToNumber } from "@/lib/format";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2, Target } from "lucide-react";
@@ -14,6 +14,8 @@ export const Route = createFileRoute("/_authenticated/metas")({
 function GoalsPage() {
   const qc = useQueryClient();
   const [form, setForm] = useState({ titulo: "", valor_meta: "", valor_atual: "0" });
+  const [formDisplayMeta, setFormDisplayMeta] = useState("");
+  const [formDisplayAtual, setFormDisplayAtual] = useState("");
 
   const { data: goals } = useQuery({
     queryKey: ["goals"],
@@ -30,12 +32,18 @@ function GoalsPage() {
       const { error } = await supabase.from("goals").insert({
         user_id: auth.user!.id,
         titulo: form.titulo,
-        valor_meta: Number(form.valor_meta),
-        valor_atual: Number(form.valor_atual),
+        valor_meta: parseBrlToNumber(form.valor_meta),
+        valor_atual: parseBrlToNumber(form.valor_atual),
       });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Meta criada!"); qc.invalidateQueries({ queryKey: ["goals"] }); setForm({ titulo: "", valor_meta: "", valor_atual: "0" }); },
+    onSuccess: () => { 
+      toast.success("Meta criada!"); 
+      qc.invalidateQueries({ queryKey: ["goals"] }); 
+      setForm({ titulo: "", valor_meta: "", valor_atual: "0" }); 
+      setFormDisplayMeta("");
+      setFormDisplayAtual("");
+    },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -67,11 +75,19 @@ function GoalsPage() {
         <input required placeholder="Título da meta (ex: Viagem à praia)" value={form.titulo}
           onChange={(e) => setForm({ ...form, titulo: e.target.value })}
           className="rounded-xl border border-input bg-background px-4 py-2.5 text-sm" />
-        <input required type="number" step="0.01" placeholder="Valor da meta" value={form.valor_meta}
-          onChange={(e) => setForm({ ...form, valor_meta: e.target.value })}
+        <input required type="text" inputMode="numeric" placeholder="Valor da meta" value={formDisplayMeta}
+          onChange={(e) => {
+            const formatted = formatBrlInput(e.target.value);
+            setFormDisplayMeta(formatted);
+            setForm({ ...form, valor_meta: formatted });
+          }}
           className="rounded-xl border border-input bg-background px-4 py-2.5 text-sm" />
-        <input type="number" step="0.01" placeholder="Já guardado" value={form.valor_atual}
-          onChange={(e) => setForm({ ...form, valor_atual: e.target.value })}
+        <input type="text" inputMode="numeric" placeholder="Já guardado" value={formDisplayAtual}
+          onChange={(e) => {
+            const formatted = formatBrlInput(e.target.value);
+            setFormDisplayAtual(formatted);
+            setForm({ ...form, valor_atual: formatted });
+          }}
           className="rounded-xl border border-input bg-background px-4 py-2.5 text-sm" />
         <button className="inline-flex items-center justify-center gap-2 rounded-full gradient-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-elegant hover:brightness-110">
           <Plus className="h-4 w-4" /> Criar
